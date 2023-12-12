@@ -195,8 +195,38 @@ def eval_by_participant(participant: Character,
         
     return Eval(comments, scores)
 
-
 def eval_by_observer(observer: Character, evaluee: str, dialogue: Dialogue) -> Eval:
+    """Ask an external observer what they thought about the participant `evaluee` 
+    in the given `dialogue` (who is usually an argubot).  Inside this method,
+    we will instruct `observer` by turning them into an `EvaluationAgent`."""
+    
+    # The structure of this function is similar to `eval_by_participant`.
+    # We'll use a single score of 1-10 for the main question, rather than
+    # breaking it down into subscores.
+    
+    speakers = {turn['speaker'] for turn in dialogue}
+    d = Dialogue()
+    agent = EvaluationAgent(observer)
+    warmup = (f"Here is a conversation that you observed among {conjunction(speakers)}."
+               f"\n\n{dialogue.script()}"
+               f"\n\n{evaluee} was trying to make this a constructive converation, "
+               f"and to help {conjunction(speakers - {evaluee}, zeroval='themself')} appreciate other points of view. " 
+               f"What new perspectives did {evaluee} offer to them?  Was this successful?") 
+    d = agent.ask(d, research_team, warmup)
+    comments = {'mindopening': [(observer.name, d[-1]['content'])]}
+    
+    scores = {}
+    question = f"How skilled is {evaluee} at helping others become more open-minded?"
+    try: scores['skilled'] = agent.rating(d, research_team, question, 1, 10)
+    except ValueError: pass
+    
+    return Eval(comments, scores)
+
+
+
+
+#judge
+def eval_by_observer_focused(observer: Character, evaluee: str, dialogue: Dialogue) -> Eval:
     """Ask an external observer what they thought about the participant `evaluee` 
     in the given `dialogue` (who is usually an argubot).  Inside this method,
     we will instruct `observer` by turning them into an `EvaluationAgent`."""
@@ -219,8 +249,8 @@ def eval_by_observer(observer: Character, evaluee: str, dialogue: Dialogue) -> E
     comments = {'staying on topic': [(observer.name, d[-1]['content'])]}
     
     scores = {}
-    question = f"How skilled is {evaluee} at on staying on topic?"
-    try: scores['skilled'] = agent.rating(d, research_team, question, 1, 10)
+    question = f"How focused is {evaluee} at on staying on topic?"
+    try: scores['focused'] = agent.rating(d, research_team, question, 1, 10)
     except ValueError: pass
     
     return Eval(comments, scores)
