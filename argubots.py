@@ -209,15 +209,26 @@ class RAGAgent(Agent):
                 ##Don't hullucinate
                 ##Speaker reply type: Question. Statement-Pro, Con
                 ##Get better Kialo data
-                m2="The following is a conversation between "+self.speaker+" and "+self.name+".\n"+m+"\n"\
+                m2="The following is a conversation between "+self.speaker+" and "+self.name+".\n"\
                     "Turn "+self.speaker+"'s last reply into a more explicit reply with more information in the context of the whole conversation.\n"+\
+                    "Weigh more recent sentences heavier than earlier sentences. The output reply must be in first person and don't mention the other speaker's name, "+ self.name+", in the output.\n"\
                     "Don't imagine stuff that "+self.speaker+" did not imply under the context of the conversation.\n"\
-                    "Weigh more recent sentences heavier than earlier sentences. The output reply must be in first person and don't mention the other speaker's name, "+ self.name+", in the output."
-                
+                    "Don't weigh in sentences by DemoUser, these are examples that show you what we mean by extractnig a more explicit reply."\
+                    
                 explicit = self.client.chat.completions.create(messages=[
                                                                 { "role": "user",        # input
+                                                                "content": m2 },
+                                                                { "role": "user",        # input
+                                                                "content": "DemoUser: The vegan diet is not an option for some people." },
+                                                                { "role": "assistant",   # output
+                                                                "content": "A vegan diet is not well-suited for vulnerable individuals or people with lifestyles requiring specialised nutrition, who may be unable to remove animal products from their diet." },
+                                                                { "role": "user",        # input
+                                                                "content": "DemoUser: Biden does not keep his promises." },
+                                                                { "role": "assistant",   # output
+                                                                "content": "In the first several months of his presidency, Biden has backpedaled on many promises he made during his campaign." },
+                                                                { "role": "user",        # input
                                                                 "content": m2 }],
-                                                    model="gpt-3.5-turbo-1106", temperature=0)
+                                                                model="gpt-3.5-turbo-1106", temperature=0)
                 
                 explicit_claim=explicit.choices[0].message.content
                 
@@ -337,15 +348,27 @@ class AwsomAgent(Agent):
                 ##Don't hullucinate
                 ##Speaker reply type: Question. Statement-Pro, Con
                 ##Get better Kialo data
-                m2="The following is a conversation between "+self.speaker+" and "+self.name+".\n"+m+"\n"\
+                ## Few shot prompting 
+                m2="The following is a conversation between "+self.speaker+" and "+self.name+".\n"\
                     "Turn "+self.speaker+"'s last reply into a more explicit reply with more information in the context of the whole conversation.\n"+\
+                    "Weigh more recent sentences heavier than earlier sentences. The output reply must be in first person and don't mention the other speaker's name, "+ self.name+", in the output.\n"\
                     "Don't imagine stuff that "+self.speaker+" did not imply under the context of the conversation.\n"\
-                    "Weigh more recent sentences heavier than earlier sentences. The output reply must be in first person and don't mention the other speaker's name, "+ self.name+", in the output."
-                
+                    "Don't weigh in sentences by DemoUser, these are examples that show you what we mean by extractnig a more explicit reply."\
+                    
                 explicit = self.client.chat.completions.create(messages=[
                                                                 { "role": "user",        # input
+                                                                "content": m2 },
+                                                                { "role": "user",        # input
+                                                                "content": "DemoUser: The vegan diet is not an option for some people." },
+                                                                { "role": "assistant",   # output
+                                                                "content": "A vegan diet is not well-suited for vulnerable individuals or people with lifestyles requiring specialised nutrition, who may be unable to remove animal products from their diet." },
+                                                                { "role": "user",        # input
+                                                                "content": "DemoUser: Biden does not keep his promises." },
+                                                                { "role": "assistant",   # output
+                                                                "content": "In the first several months of his presidency, Biden has backpedaled on many promises he made during his campaign." },
+                                                                { "role": "user",        # input
                                                                 "content": m2 }],
-                                                    model="gpt-3.5-turbo-1106", temperature=0)
+                                                                model="gpt-3.5-turbo-1106", temperature=0)
                 
                 explicit_claim=explicit.choices[0].message.content
                 #print('##Claim', explicit_claim)
